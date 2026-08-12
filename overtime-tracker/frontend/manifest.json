@@ -1,0 +1,13 @@
+{
+  "name": "Livro de Horas",
+  "short_name": "Livro de Horas",
+  "description": "Controlo pessoal de horas normais e horas extras",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1A1F",
+  "theme_color": "#0F1A1F",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

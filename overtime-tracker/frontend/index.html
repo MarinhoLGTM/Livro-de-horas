@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0F1A1F">
+<title>Livro de Horas</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Ecrã de login -->
+<div id="tela-login" class="tela-login">
+  <div class="cartao-login">
+    <div class="marca">
+      <span class="marca-icone">≡</span>
+      <span class="marca-nome">Livro de Horas</span>
+    </div>
+    <p class="login-subtitulo">Entra com a tua senha para abrir o teu livro.</p>
+    <input type="password" id="input-senha" class="input-senha" placeholder="Senha" autocomplete="current-password">
+    <button id="btn-login" class="btn btn-primario">Entrar</button>
+    <p id="login-erro" class="login-erro"></p>
+  </div>
+</div>
+
+<!-- App principal -->
+<div id="app" class="app oculto">
+
+  <header class="cabecalho">
+    <div class="marca">
+      <span class="marca-icone">≡</span>
+      <span class="marca-nome">Livro de Horas</span>
+    </div>
+    <button id="btn-config" class="btn-icone" title="Configurações">⚙</button>
+  </header>
+
+  <main class="conteudo">
+
+    <!-- Navegação de mês -->
+    <div class="nav-mes">
+      <button id="mes-anterior" class="btn-icone">‹</button>
+      <h1 id="mes-atual" class="titulo-mes">—</h1>
+      <button id="mes-seguinte" class="btn-icone">›</button>
+    </div>
+
+    <!-- Cartão de resumo estilo recibo -->
+    <section class="recibo" id="cartao-resumo">
+      <div class="recibo-linha recibo-titulo">
+        <span>Resumo do mês</span>
+      </div>
+      <div class="recibo-linha">
+        <span>Dias trabalhados</span>
+        <span class="mono" id="r-dias">0</span>
+      </div>
+      <div class="recibo-linha">
+        <span>Horas normais</span>
+        <span class="mono" id="r-normais">0h</span>
+      </div>
+      <div class="recibo-linha">
+        <span>Vale alimentação</span>
+        <span class="mono" id="r-vale">0,00€</span>
+      </div>
+      <div class="recibo-separador"></div>
+      <div class="recibo-linha tag-50">
+        <span>Extra 50%</span>
+        <span class="mono" id="r-e50">0h</span>
+      </div>
+      <div class="recibo-linha tag-75">
+        <span>Extra 75%</span>
+        <span class="mono" id="r-e75">0h</span>
+      </div>
+      <div class="recibo-linha tag-100">
+        <span>Extra 100%</span>
+        <span class="mono" id="r-e100">0h</span>
+      </div>
+      <div class="recibo-linha">
+        <span>Valor das extras</span>
+        <span class="mono" id="r-valor-extras">0,00€</span>
+      </div>
+      <div class="recibo-separador"></div>
+      <div class="recibo-linha recibo-total">
+        <span>Total geral</span>
+        <span class="mono" id="r-total">0,00€</span>
+      </div>
+      <div class="recibo-periodos">
+        <span id="r-periodo-mes">período mês —</span>
+        <span id="r-periodo-extras">período extras —</span>
+      </div>
+      <div class="recibo-acoes">
+        <button id="btn-pdf" class="btn btn-secundario">Exportar PDF</button>
+        <button id="btn-excel" class="btn btn-secundario">Exportar Excel</button>
+      </div>
+    </section>
+
+    <!-- Calendário -->
+    <section class="calendario-wrap">
+      <div class="dias-semana">
+        <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+      </div>
+      <div id="grade-calendario" class="grade-calendario"></div>
+    </section>
+
+    <div class="legenda">
+      <span><i class="ponto tag-normal"></i> normal</span>
+      <span><i class="ponto tag-50"></i> extra 50%</span>
+      <span><i class="ponto tag-75"></i> extra 75%</span>
+      <span><i class="ponto tag-100"></i> extra 100% / fim de semana</span>
+    </div>
+
+  </main>
+</div>
+
+<!-- Painel lateral de registo do dia -->
+<div id="painel-fundo" class="painel-fundo oculto">
+  <div class="painel">
+    <div class="painel-cabecalho">
+      <h2 id="painel-data">—</h2>
+      <button id="btn-fechar-painel" class="btn-icone">×</button>
+    </div>
+
+    <label class="campo-label">Tipo de dia</label>
+    <div class="tipo-dia-opcoes" id="tipo-dia-opcoes">
+      <button class="tipo-btn ativo" data-tipo="normal">Normal</button>
+      <button class="tipo-btn" data-tipo="sabado">Sábado</button>
+      <button class="tipo-btn" data-tipo="feriado">Feriado</button>
+    </div>
+
+    <div class="campo-linha">
+      <div class="campo">
+        <label class="campo-label">Entrada</label>
+        <input type="time" id="input-entrada" class="input-time">
+      </div>
+      <div class="campo">
+        <label class="campo-label">Saída</label>
+        <input type="time" id="input-saida" class="input-time">
+      </div>
+    </div>
+
+    <label class="campo-label">Observação (opcional)</label>
+    <textarea id="input-observacao" class="input-textarea" placeholder="O que aconteceu neste dia..."></textarea>
+
+    <div id="painel-resultado" class="painel-resultado oculto">
+      <div class="recibo-linha"><span>Horas trabalhadas</span><span class="mono" id="pr-total-horas">—</span></div>
+      <div class="recibo-linha"><span>Valor do dia</span><span class="mono" id="pr-valor">—</span></div>
+    </div>
+
+    <div class="painel-acoes">
+      <button id="btn-apagar-registo" class="btn btn-perigo oculto">Apagar</button>
+      <button id="btn-salvar-registo" class="btn btn-primario">Guardar</button>
+    </div>
+    <p id="painel-erro" class="login-erro"></p>
+  </div>
+</div>
+
+<!-- Modal de configuração -->
+<div id="config-fundo" class="painel-fundo oculto">
+  <div class="painel">
+    <div class="painel-cabecalho">
+      <h2>Configurações</h2>
+      <button id="btn-fechar-config" class="btn-icone">×</button>
+    </div>
+    <label class="campo-label">Valor da hora normal (€)</label>
+    <input type="number" step="0.01" id="config-valor-hora" class="input-time">
+    <label class="campo-label">Valor do vale alimentação (€/dia)</label>
+    <input type="number" step="0.01" id="config-valor-vale" class="input-time">
+    <div class="painel-acoes">
+      <button id="btn-salvar-config" class="btn btn-primario">Guardar configuração</button>
+    </div>
+    <p id="config-erro" class="login-erro"></p>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

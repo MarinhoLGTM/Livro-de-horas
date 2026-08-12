@@ -1,0 +1,413 @@
+:root {
+  --ink: #0F1A1F;
+  --surface: #16242B;
+  --surface-2: #1C2C33;
+  --border: #24363D;
+  --text: #EDEFEF;
+  --text-muted: #7E9298;
+  --emerald: #33C58E;
+  --tier50: #E3B23C;
+  --tier75: #E0873C;
+  --tier100: #D9564A;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono { font-family: 'IBM Plex Mono', monospace; }
+
+.oculto { display: none !important; }
+
+/* ---------- Login ---------- */
+.tela-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.cartao-login {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  text-align: center;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.marca-icone {
+  color: var(--emerald);
+  font-size: 22px;
+}
+
+.login-subtitulo {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 12px 0 20px;
+}
+
+.input-senha, .input-time, .input-textarea {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  margin-bottom: 12px;
+}
+
+.input-senha:focus, .input-time:focus, .input-textarea:focus {
+  outline: 2px solid var(--emerald);
+  outline-offset: 1px;
+}
+
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn-primario { background: var(--emerald); color: #06231A; }
+.btn-primario:hover { filter: brightness(1.08); }
+
+.btn-secundario {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-secundario:hover { border-color: var(--emerald); }
+
+.btn-perigo {
+  background: transparent;
+  border: 1px solid var(--tier100);
+  color: var(--tier100);
+}
+
+.login-erro {
+  color: var(--tier100);
+  font-size: 13px;
+  min-height: 18px;
+  margin-top: 8px;
+}
+
+/* ---------- App shell ---------- */
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--ink);
+  z-index: 10;
+}
+
+.btn-icone {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.btn-icone:hover { color: var(--text); background: var(--surface); }
+
+.conteudo {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* ---------- Navegação de mês ---------- */
+.nav-mes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.titulo-mes {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+/* ---------- Recibo (cartão de resumo) ---------- */
+.recibo {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 20px 16px;
+  margin-bottom: 24px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent, transparent 100%
+  );
+  position: relative;
+}
+
+.recibo::before {
+  content: "";
+  position: absolute;
+  top: -6px; left: 16px; right: 16px;
+  height: 6px;
+  background-image: radial-gradient(circle, var(--ink) 45%, transparent 46%);
+  background-size: 12px 12px;
+  background-position: 0 0;
+}
+
+.recibo-linha {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 6px 0;
+  color: var(--text);
+}
+
+.recibo-titulo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding-bottom: 10px;
+}
+
+.recibo-separador {
+  border-top: 1px dashed var(--border);
+  margin: 8px 0;
+}
+
+.recibo-total {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--emerald);
+}
+
+.recibo-periodos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.recibo-acoes {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tag-50 { color: var(--tier50); }
+.tag-75 { color: var(--tier75); }
+.tag-100 { color: var(--tier100); }
+
+/* ---------- Calendário ---------- */
+.dias-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.grade-calendario {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.dia-celula {
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  padding: 4px 2px;
+}
+
+.dia-celula:hover { border-color: var(--emerald); }
+
+.dia-celula.vazio { visibility: hidden; cursor: default; }
+
+.dia-celula .dia-num { font-size: 13px; }
+
+.dia-celula .dia-valor {
+  font-size: 9px;
+  margin-top: 2px;
+}
+
+.dia-celula.tem-registo.tipo-normal { border-color: var(--emerald); }
+.dia-celula.tem-registo.tipo-sabado,
+.dia-celula.tem-registo.tipo-feriado { border-color: var(--tier100); }
+
+.dia-celula .obs-ponto {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tier50);
+}
+
+.dia-celula.hoje { outline: 1px solid var(--text-muted); }
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.legenda .ponto {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+.tag-normal.ponto { background: var(--emerald); }
+.tag-50.ponto { background: var(--tier50); }
+.tag-75.ponto { background: var(--tier75); }
+.tag-100.ponto { background: var(--tier100); }
+
+/* ---------- Painel lateral (registo do dia) ---------- */
+.painel-fundo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+.painel {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 28px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 540px) {
+  .painel-fundo { align-items: center; }
+  .painel { border-radius: var(--radius); border-bottom: 1px solid var(--border); }
+}
+
+.painel-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.painel-cabecalho h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.campo-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+.tipo-dia-opcoes {
+  display: flex;
+  gap: 8px;
+}
+
+.tipo-btn {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tipo-btn.ativo {
+  border-color: var(--emerald);
+  color: var(--emerald);
+  background: rgba(51, 197, 142, 0.1);
+}
+
+.campo-linha {
+  display: flex;
+  gap: 10px;
+}
+.campo-linha .campo { flex: 1; }
+
+.input-textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.painel-resultado {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+
+.painel-acoes {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}

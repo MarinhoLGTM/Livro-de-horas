@@ -1,0 +1,20 @@
+{
+  "name": "overtime-tracker-backend",
+  "version": "1.0.0",
+  "description": "Backend do app de controlo de horas extras",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.15.0",
+    "pg": "^8.12.0"
+  }
+}
