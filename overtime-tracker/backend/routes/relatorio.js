@@ -3,70 +3,90 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const pool = require('../db');
 const { getPeriodoFolhaExtras, getPeriodoMesCalendario } = require('../utils/periodos');
+const exigirAdmin = require('../middleware/admin');
 
 const router = express.Router();
 
-async function buscarDadosMes(ano, mes) {
-  const periodoExtras = getPeriodoFolhaExtras(ano, mes);
-  const periodoMes = getPeriodoMesCalendario(ano, mes);
+function round2(n) {
+  return Math.round(n * 100) / 100;
+}
 
-  const [regExtras, regMes] = await Promise.all([
-    pool.query('select * from registros where data between $1 and $2 order by data', [
-      periodoExtras.inicio,
-      periodoExtras.fim,
-    ]),
-    pool.query('select * from registros where data between $1 and $2 order by data', [
-      periodoMes.inicio,
-      periodoMes.fim,
-    ]),
-  ]);
-
-  const totalExtra50 = regExtras.rows.reduce((s, r) => s + Number(r.horas_extra_50), 0);
-  const totalExtra75 = regExtras.rows.reduce((s, r) => s + Number(r.horas_extra_75), 0);
-  const totalExtra100 = regExtras.rows.reduce((s, r) => s + Number(r.horas_extra_100), 0);
-  const valorExtras = regExtras.rows.reduce((s, r) => {
+function calcularResumo(registrosExtras, registrosMes) {
+  const totalExtra50 = registrosExtras.reduce((s, r) => s + Number(r.horas_extra_50), 0);
+  const totalExtra75 = registrosExtras.reduce((s, r) => s + Number(r.horas_extra_75), 0);
+  const totalExtra100 = registrosExtras.reduce((s, r) => s + Number(r.horas_extra_100), 0);
+  const valorExtras = registrosExtras.reduce((s, r) => {
     const vh = Number(r.valor_hora_usado);
     return s + Number(r.horas_extra_50) * vh * 1.5 + Number(r.horas_extra_75) * vh * 1.75 + Number(r.horas_extra_100) * vh * 2;
   }, 0);
 
-  const totalHorasNormais = regMes.rows.reduce((s, r) => s + Number(r.horas_normais), 0);
-  const diasTrabalhados = regMes.rows.length;
-  const totalValeAlimentacao = regMes.rows.reduce((s, r) => s + Number(r.vale_alimentacao_usado), 0);
-  const valorHorasNormais = regMes.rows.reduce((s, r) => s + Number(r.horas_normais) * Number(r.valor_hora_usado), 0);
+  const totalHorasNormais = registrosMes.reduce((s, r) => s + Number(r.horas_normais), 0);
+  const diasTrabalhados = registrosMes.length;
+  const totalValeAlimentacao = registrosMes.reduce((s, r) => s + Number(r.vale_alimentacao_usado), 0);
+  const valorHorasNormais = registrosMes.reduce((s, r) => s + Number(r.horas_normais) * Number(r.valor_hora_usado), 0);
+
+  return {
+    diasTrabalhados,
+    totalHorasNormais: round2(totalHorasNormais),
+    totalExtra50: round2(totalExtra50),
+    totalExtra75: round2(totalExtra75),
+    totalExtra100: round2(totalExtra100),
+    valorHorasNormais: round2(valorHorasNormais),
+    valorExtras: round2(valorExtras),
+    totalValeAlimentacao: round2(totalValeAlimentacao),
+    valorTotalGeral: round2(valorHorasNormais + valorExtras + totalValeAlimentacao),
+  };
+}
+
+async function buscarDadosMes(usuarioId, ano, mes) {
+  const periodoExtras = getPeriodoFolhaExtras(ano, mes);
+  const periodoMes = getPeriodoMesCalendario(ano, mes);
+
+  const [regExtras, regMes] = await Promise.all([
+    pool.query('select * from registros where usuario_id = $1 and data between $2 and $3 order by data', [
+      usuarioId, periodoExtras.inicio, periodoExtras.fim,
+    ]),
+    pool.query('select * from registros where usuario_id = $1 and data between $2 and $3 order by data', [
+      usuarioId, periodoMes.inicio, periodoMes.fim,
+    ]),
+  ]);
 
   return {
     periodoExtras,
     periodoMes,
     registrosExtras: regExtras.rows,
     registrosMes: regMes.rows,
-    resumo: {
-      diasTrabalhados,
-      totalHorasNormais: round2(totalHorasNormais),
-      totalExtra50: round2(totalExtra50),
-      totalExtra75: round2(totalExtra75),
-      totalExtra100: round2(totalExtra100),
-      valorHorasNormais: round2(valorHorasNormais),
-      valorExtras: round2(valorExtras),
-      totalValeAlimentacao: round2(totalValeAlimentacao),
-      valorTotalGeral: round2(valorHorasNormais + valorExtras + totalValeAlimentacao),
-    },
+    resumo: calcularResumo(regExtras.rows, regMes.rows),
   };
 }
 
-function round2(n) {
-  return Math.round(n * 100) / 100;
-}
-
-// GET /api/relatorio/:ano/:mes -> resumo em JSON
+// GET /api/relatorio/:ano/:mes -> resumo pessoal (do usuário logado)
 router.get('/:ano/:mes', async (req, res) => {
-  const ano = Number(req.params.ano);
-  const mes = Number(req.params.mes);
   try {
-    const dados = await buscarDadosMes(ano, mes);
+    const dados = await buscarDadosMes(req.usuario.id, Number(req.params.ano), Number(req.params.mes));
     res.json(dados);
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: 'Erro ao gerar relatório.' });
+  }
+});
+
+// GET /api/relatorio/:ano/:mes/equipa -> resumo de TODOS os funcionários (só admin)
+router.get('/:ano/:mes/equipa', exigirAdmin, async (req, res) => {
+  const ano = Number(req.params.ano);
+  const mes = Number(req.params.mes);
+  try {
+    const { rows: usuarios } = await pool.query('select id, nome, email from usuarios order by nome');
+    const resumos = await Promise.all(
+      usuarios.map(async (u) => {
+        const dados = await buscarDadosMes(u.id, ano, mes);
+        return { id: u.id, nome: u.nome, email: u.email, resumo: dados.resumo };
+      })
+    );
+    res.json({ periodoReferencia: `${mes}/${ano}`, funcionarios: resumos });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro ao gerar relatório da equipa.' });
   }
 });
 
@@ -75,7 +95,7 @@ router.get('/:ano/:mes/pdf', async (req, res) => {
   const ano = Number(req.params.ano);
   const mes = Number(req.params.mes);
   try {
-    const dados = await buscarDadosMes(ano, mes);
+    const dados = await buscarDadosMes(req.usuario.id, ano, mes);
     const doc = new PDFDocument({ margin: 40 });
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -130,7 +150,7 @@ router.get('/:ano/:mes/excel', async (req, res) => {
   const ano = Number(req.params.ano);
   const mes = Number(req.params.mes);
   try {
-    const dados = await buscarDadosMes(ano, mes);
+    const dados = await buscarDadosMes(req.usuario.id, ano, mes);
     const workbook = new ExcelJS.Workbook();
 
     const sheetMes = workbook.addWorksheet('Horas normais e vale');
@@ -145,13 +165,8 @@ router.get('/:ano/:mes/excel', async (req, res) => {
     ];
     dados.registrosMes.forEach((r) => {
       sheetMes.addRow({
-        data: r.data,
-        tipo: r.tipo_dia,
-        entrada: r.hora_entrada,
-        saida: r.hora_saida,
-        normais: Number(r.horas_normais),
-        vale: Number(r.vale_alimentacao_usado),
-        obs: r.observacao || '',
+        data: r.data, tipo: r.tipo_dia, entrada: r.hora_entrada, saida: r.hora_saida,
+        normais: Number(r.horas_normais), vale: Number(r.vale_alimentacao_usado), obs: r.observacao || '',
       });
     });
 
@@ -165,11 +180,7 @@ router.get('/:ano/:mes/excel', async (req, res) => {
     ];
     dados.registrosExtras.forEach((r) => {
       sheetExtras.addRow({
-        data: r.data,
-        tipo: r.tipo_dia,
-        e50: Number(r.horas_extra_50),
-        e75: Number(r.horas_extra_75),
-        e100: Number(r.horas_extra_100),
+        data: r.data, tipo: r.tipo_dia, e50: Number(r.horas_extra_50), e75: Number(r.horas_extra_75), e100: Number(r.horas_extra_100),
       });
     });
 

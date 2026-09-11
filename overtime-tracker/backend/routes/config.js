@@ -3,10 +3,14 @@ const pool = require('../db');
 
 const router = express.Router();
 
-// GET /api/config -> valores atuais
+// GET /api/config -> valores do usuário logado
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await pool.query('select valor_hora_atual, valor_vale_alimentacao_atual from config where id = 1');
+    const { rows } = await pool.query(
+      'select nome, email, papel, valor_hora_atual, valor_vale_alimentacao_atual from usuarios where id = $1',
+      [req.usuario.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ erro: 'Usuário não encontrado.' });
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -14,7 +18,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PUT /api/config -> atualizar valores (não afeta registros já lançados)
+// PUT /api/config -> atualizar os próprios valores (não afeta registos já lançados)
 router.put('/', async (req, res) => {
   const { valorHoraAtual, valorValeAlimentacaoAtual } = req.body;
 
@@ -24,9 +28,9 @@ router.put('/', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `update config set valor_hora_atual = $1, valor_vale_alimentacao_atual = $2
-       where id = 1 returning valor_hora_atual, valor_vale_alimentacao_atual`,
-      [valorHoraAtual, valorValeAlimentacaoAtual]
+      `update usuarios set valor_hora_atual = $1, valor_vale_alimentacao_atual = $2
+       where id = $3 returning valor_hora_atual, valor_vale_alimentacao_atual`,
+      [valorHoraAtual, valorValeAlimentacaoAtual, req.usuario.id]
     );
     res.json(rows[0]);
   } catch (err) {

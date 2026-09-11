@@ -4,19 +4,22 @@ const { calcularRegistro } = require('../utils/calculo');
 
 const router = express.Router();
 
-async function getConfigAtual() {
-  const { rows } = await pool.query('select valor_hora_atual, valor_vale_alimentacao_atual from config where id = 1');
+async function getConfigDoUsuario(usuarioId) {
+  const { rows } = await pool.query(
+    'select valor_hora_atual, valor_vale_alimentacao_atual from usuarios where id = $1',
+    [usuarioId]
+  );
   return rows[0];
 }
 
-// GET /api/registros?inicio=YYYY-MM-DD&fim=YYYY-MM-DD
+// GET /api/registros?inicio=YYYY-MM-DD&fim=YYYY-MM-DD -> só do usuário logado
 router.get('/', async (req, res) => {
   const { inicio, fim } = req.query;
   try {
-    let query = 'select * from registros';
-    const params = [];
+    let query = 'select * from registros where usuario_id = $1';
+    const params = [req.usuario.id];
     if (inicio && fim) {
-      query += ' where data between $1 and $2';
+      query += ' and data between $2 and $3';
       params.push(inicio, fim);
     }
     query += ' order by data asc';
@@ -28,10 +31,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/registros/:data (uma data específica, YYYY-MM-DD)
+// GET /api/registros/:data
 router.get('/:data', async (req, res) => {
   try {
-    const { rows } = await pool.query('select * from registros where data = $1', [req.params.data]);
+    const { rows } = await pool.query('select * from registros where usuario_id = $1 and data = $2', [
+      req.usuario.id,
+      req.params.data,
+    ]);
     if (rows.length === 0) return res.status(404).json({ erro: 'Sem registro nesse dia.' });
     res.json(rows[0]);
   } catch (err) {
@@ -40,7 +46,7 @@ router.get('/:data', async (req, res) => {
   }
 });
 
-// POST /api/registros -> criar ou substituir o registro de um dia
+// POST /api/registros -> criar ou substituir o registro de um dia (sempre do usuário logado)
 router.post('/', async (req, res) => {
   const { data, tipoDia, horaEntrada, horaSaida, observacao } = req.body;
 
@@ -52,7 +58,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const config = await getConfigAtual();
+    const config = await getConfigDoUsuario(req.usuario.id);
     const calculo = calcularRegistro({
       horaEntrada,
       horaSaida,
@@ -63,11 +69,11 @@ router.post('/', async (req, res) => {
 
     const { rows } = await pool.query(
       `insert into registros
-        (data, tipo_dia, hora_entrada, hora_saida, horas_trabalhadas, horas_normais,
+        (usuario_id, data, tipo_dia, hora_entrada, hora_saida, horas_trabalhadas, horas_normais,
          horas_extra_50, horas_extra_75, horas_extra_100, valor_hora_usado,
          vale_alimentacao_usado, valor_total, observacao, updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, now())
-       on conflict (data) do update set
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, now())
+       on conflict (usuario_id, data) do update set
          tipo_dia = excluded.tipo_dia,
          hora_entrada = excluded.hora_entrada,
          hora_saida = excluded.hora_saida,
@@ -83,6 +89,7 @@ router.post('/', async (req, res) => {
          updated_at = now()
        returning *`,
       [
+        req.usuario.id,
         data,
         tipoDia,
         horaEntrada,
@@ -109,7 +116,7 @@ router.post('/', async (req, res) => {
 // DELETE /api/registros/:data
 router.delete('/:data', async (req, res) => {
   try {
-    await pool.query('delete from registros where data = $1', [req.params.data]);
+    await pool.query('delete from registros where usuario_id = $1 and data = $2', [req.usuario.id, req.params.data]);
     res.status(204).send();
   } catch (err) {
     console.error(err);
