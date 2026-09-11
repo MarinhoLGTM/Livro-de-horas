@@ -66,6 +66,37 @@ body {
   margin: 12px 0 20px;
 }
 
+.abas-login {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.aba-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 9px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.aba-btn.ativo {
+  background: var(--surface);
+  color: var(--emerald);
+}
+
+.cabecalho-acoes {
+  display: flex;
+  gap: 4px;
+}
+
 .input-senha, .input-time, .input-textarea {
   width: 100%;
   background: var(--surface-2);
@@ -410,4 +441,27 @@ body {
   display: flex;
   gap: 10px;
   margin-top: 18px;
+}
+
+/* ---------- Resumo da equipa (admin) ---------- */
+.equipa-cartao {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.equipa-nome {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.equipa-email {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 400;
+  display: block;
 }

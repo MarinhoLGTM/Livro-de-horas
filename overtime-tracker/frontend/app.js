@@ -1,5 +1,6 @@
 const API = '/api';
 let token = localStorage.getItem('token') || null;
+let papelUsuario = localStorage.getItem('papel') || null;
 let dataRef = new Date(); // mês sendo visualizado
 let registrosDoMes = {}; // { 'YYYY-MM-DD': registro }
 let diaSelecionado = null;
@@ -9,28 +10,69 @@ let config = { valor_hora_atual: 5.88, valor_vale_alimentacao_atual: 10.46 };
 const $ = (id) => document.getElementById(id);
 
 // ---------- Auth ----------
-async function login() {
+async function entrar() {
+  const email = $('input-email').value.trim();
   const senha = $('input-senha').value;
   $('login-erro').textContent = '';
+
+  if (!email || !senha) {
+    $('login-erro').textContent = 'Preenche email e senha.';
+    return;
+  }
+
   try {
     const resp = await fetch(`${API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ senha }),
+      body: JSON.stringify({ email, senha }),
     });
-    if (!resp.ok) throw new Error('Senha incorreta.');
     const data = await resp.json();
-    token = data.token;
-    localStorage.setItem('token', token);
+    if (!resp.ok) throw new Error(data.erro || 'Erro ao entrar.');
+    guardarSessao(data);
     mostrarApp();
   } catch (err) {
     $('login-erro').textContent = err.message;
   }
 }
 
+async function registar() {
+  const nome = $('input-nome').value.trim();
+  const email = $('input-email').value.trim();
+  const senha = $('input-senha').value;
+  $('login-erro').textContent = '';
+
+  if (!nome || !email || !senha) {
+    $('login-erro').textContent = 'Preenche nome, email e senha.';
+    return;
+  }
+
+  try {
+    const resp = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, email, senha }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.erro || 'Erro ao criar conta.');
+    guardarSessao(data);
+    mostrarApp();
+  } catch (err) {
+    $('login-erro').textContent = err.message;
+  }
+}
+
+function guardarSessao(data) {
+  token = data.token;
+  papelUsuario = data.papel;
+  localStorage.setItem('token', token);
+  localStorage.setItem('papel', papelUsuario);
+  localStorage.setItem('nome', data.nome || '');
+}
+
 function mostrarApp() {
   $('tela-login').classList.add('oculto');
   $('app').classList.remove('oculto');
+  $('btn-equipa').classList.toggle('oculto', papelUsuario !== 'admin');
   carregarConfig().then(() => carregarMes());
 }
 
@@ -45,6 +87,8 @@ async function apiFetch(path, options = {}) {
   });
   if (resp.status === 401) {
     localStorage.removeItem('token');
+    localStorage.removeItem('papel');
+    localStorage.removeItem('nome');
     token = null;
     $('app').classList.add('oculto');
     $('tela-login').classList.remove('oculto');
@@ -254,6 +298,43 @@ async function apagarRegistro() {
   carregarMes();
 }
 
+// ---------- Equipa (admin) ----------
+async function carregarEquipa() {
+  const ano = dataRef.getFullYear();
+  const mes = dataRef.getMonth() + 1;
+  $('equipa-periodo').textContent = `${String(mes).padStart(2, '0')}/${ano}`;
+  $('equipa-lista').innerHTML = '<p class="login-subtitulo">A carregar...</p>';
+
+  try {
+    const resp = await apiFetch(`/relatorio/${ano}/${mes}/equipa`);
+    if (!resp.ok) throw new Error('Erro ao carregar dados da equipa.');
+    const dados = await resp.json();
+
+    $('equipa-lista').innerHTML = '';
+    dados.funcionarios.forEach((f) => {
+      const r = f.resumo;
+      const cartao = document.createElement('div');
+      cartao.className = 'equipa-cartao';
+      cartao.innerHTML = `
+        <div class="equipa-nome">${f.nome}<span class="equipa-email">${f.email}</span></div>
+        <div class="recibo-linha"><span>Dias trabalhados</span><span class="mono">${r.diasTrabalhados}</span></div>
+        <div class="recibo-linha"><span>Horas normais</span><span class="mono">${r.totalHorasNormais}h</span></div>
+        <div class="recibo-linha tag-50"><span>Extra 50%</span><span class="mono">${r.totalExtra50}h</span></div>
+        <div class="recibo-linha tag-75"><span>Extra 75%</span><span class="mono">${r.totalExtra75}h</span></div>
+        <div class="recibo-linha tag-100"><span>Extra 100%</span><span class="mono">${r.totalExtra100}h</span></div>
+        <div class="recibo-linha recibo-total"><span>Total geral</span><span class="mono">${fmtEuro(r.valorTotalGeral)}</span></div>
+      `;
+      $('equipa-lista').appendChild(cartao);
+    });
+
+    if (dados.funcionarios.length === 0) {
+      $('equipa-lista').innerHTML = '<p class="login-subtitulo">Ainda não há funcionários registados.</p>';
+    }
+  } catch (err) {
+    $('equipa-lista').innerHTML = `<p class="login-erro">${err.message}</p>`;
+  }
+}
+
 // ---------- Export ----------
 function exportar(tipo) {
   const ano = dataRef.getFullYear();
@@ -270,8 +351,32 @@ function exportar(tipo) {
 }
 
 // ---------- Eventos ----------
-$('btn-login').addEventListener('click', login);
-$('input-senha').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+let abaAtual = 'entrar';
+
+function trocarAba(aba) {
+  abaAtual = aba;
+  $('aba-entrar').classList.toggle('ativo', aba === 'entrar');
+  $('aba-registo').classList.toggle('ativo', aba === 'registo');
+  $('input-nome').classList.toggle('oculto', aba === 'entrar');
+  $('btn-entrar').classList.toggle('oculto', aba !== 'entrar');
+  $('btn-registar').classList.toggle('oculto', aba !== 'registo');
+  $('login-erro').textContent = '';
+}
+
+$('aba-entrar').addEventListener('click', () => trocarAba('entrar'));
+$('aba-registo').addEventListener('click', () => trocarAba('registo'));
+
+$('btn-entrar').addEventListener('click', entrar);
+$('btn-registar').addEventListener('click', registar);
+$('input-senha').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') (abaAtual === 'entrar' ? entrar() : registar());
+});
+
+$('btn-equipa').addEventListener('click', () => {
+  $('equipa-fundo').classList.remove('oculto');
+  carregarEquipa();
+});
+$('btn-fechar-equipa').addEventListener('click', () => $('equipa-fundo').classList.add('oculto'));
 
 $('mes-anterior').addEventListener('click', () => {
   dataRef.setMonth(dataRef.getMonth() - 1);

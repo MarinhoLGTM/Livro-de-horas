@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -13,16 +13,26 @@
 </head>
 <body>
 
-<!-- Ecrã de login -->
+<!-- Ecrã de login / registo -->
 <div id="tela-login" class="tela-login">
   <div class="cartao-login">
     <div class="marca">
       <span class="marca-icone">≡</span>
       <span class="marca-nome">Livro de Horas</span>
     </div>
-    <p class="login-subtitulo">Entra com a tua senha para abrir o teu livro.</p>
+    <p class="login-subtitulo">Entra ou cria a tua conta para abrir o teu livro.</p>
+
+    <div class="abas-login">
+      <button id="aba-entrar" class="aba-btn ativo" data-aba="entrar">Entrar</button>
+      <button id="aba-registo" class="aba-btn" data-aba="registo">Criar conta</button>
+    </div>
+
+    <input type="text" id="input-nome" class="input-senha oculto" placeholder="O teu nome">
+    <input type="email" id="input-email" class="input-senha" placeholder="Email" autocomplete="username">
     <input type="password" id="input-senha" class="input-senha" placeholder="Senha" autocomplete="current-password">
-    <button id="btn-login" class="btn btn-primario">Entrar</button>
+
+    <button id="btn-entrar" class="btn btn-primario">Entrar</button>
+    <button id="btn-registar" class="btn btn-primario oculto">Criar conta</button>
     <p id="login-erro" class="login-erro"></p>
   </div>
 </div>
@@ -35,7 +45,10 @@
       <span class="marca-icone">≡</span>
       <span class="marca-nome">Livro de Horas</span>
     </div>
-    <button id="btn-config" class="btn-icone" title="Configurações">⚙</button>
+    <div class="cabecalho-acoes">
+      <button id="btn-equipa" class="btn-icone oculto" title="Equipa">☰</button>
+      <button id="btn-config" class="btn-icone" title="Configurações">⚙</button>
+    </div>
   </header>
 
   <main class="conteudo">
@@ -171,6 +184,18 @@
       <button id="btn-salvar-config" class="btn btn-primario">Guardar configuração</button>
     </div>
     <p id="config-erro" class="login-erro"></p>
+  </div>
+</div>
+
+<!-- Modal de resumo da equipa (admin) -->
+<div id="equipa-fundo" class="painel-fundo oculto">
+  <div class="painel">
+    <div class="painel-cabecalho">
+      <h2>Resumo da equipa</h2>
+      <button id="btn-fechar-equipa" class="btn-icone">×</button>
+    </div>
+    <p class="login-subtitulo" id="equipa-periodo">—</p>
+    <div id="equipa-lista"></div>
   </div>
 </div>
 
