@@ -77,6 +77,10 @@
         <span>Vale alimentação</span>
         <span class="mono" id="r-vale">0,00€</span>
       </div>
+      <div class="recibo-linha" id="r-noturno-linha">
+        <span>Adicional noturno</span>
+        <span class="mono" id="r-noturno">0,00€</span>
+      </div>
       <div class="recibo-separador"></div>
       <div class="recibo-linha tag-50">
         <span>Extra 50%</span>
@@ -158,6 +162,7 @@
 
     <div id="painel-resultado" class="painel-resultado oculto">
       <div class="recibo-linha"><span>Horas trabalhadas</span><span class="mono" id="pr-total-horas">—</span></div>
+      <div class="recibo-linha oculto" id="pr-noturno-linha"><span>Horas noturnas</span><span class="mono" id="pr-noturno">—</span></div>
       <div class="recibo-linha"><span>Valor do dia</span><span class="mono" id="pr-valor">—</span></div>
     </div>
 
@@ -180,6 +185,11 @@
     <input type="number" step="0.01" id="config-valor-hora" class="input-time">
     <label class="campo-label">Valor do vale alimentação (€/dia)</label>
     <input type="number" step="0.01" id="config-valor-vale" class="input-time">
+    <label class="campo-label">Turno</label>
+    <div class="tipo-dia-opcoes" id="config-turno-opcoes">
+      <button class="tipo-btn ativo" data-turno="normal">Normal (15% noturno)</button>
+      <button class="tipo-btn" data-turno="terceiro">3º Turno (25% noturno)</button>
+    </div>
     <div class="painel-acoes">
       <button id="btn-salvar-config" class="btn btn-primario">Guardar configuração</button>
     </div>

@@ -5,7 +5,8 @@ let dataRef = new Date(); // mês sendo visualizado
 let registrosDoMes = {}; // { 'YYYY-MM-DD': registro }
 let diaSelecionado = null;
 let tipoSelecionado = 'normal';
-let config = { valor_hora_atual: 5.88, valor_vale_alimentacao_atual: 10.46 };
+let config = { valor_hora_atual: 5.88, valor_vale_alimentacao_atual: 10.46, turno: 'normal' };
+let turnoConfigSelecionado = 'normal';
 
 const $ = (id) => document.getElementById(id);
 
@@ -110,7 +111,7 @@ async function salvarConfig() {
     const valorValeAlimentacaoAtual = Number($('config-valor-vale').value);
     const resp = await apiFetch('/config', {
       method: 'PUT',
-      body: JSON.stringify({ valorHoraAtual, valorValeAlimentacaoAtual }),
+      body: JSON.stringify({ valorHoraAtual, valorValeAlimentacaoAtual, turno: turnoConfigSelecionado }),
     });
     if (!resp.ok) throw new Error('Erro ao guardar.');
     config = await resp.json();
@@ -152,6 +153,8 @@ function preencherResumo(dados) {
   $('r-dias').textContent = r.diasTrabalhados;
   $('r-normais').textContent = `${r.totalHorasNormais}h`;
   $('r-vale').textContent = `${fmtEuro(r.totalValeAlimentacao)}`;
+  $('r-noturno').textContent = `${fmtEuro(r.valorAdicionalNoturno)}`;
+  $('r-noturno-linha').classList.toggle('oculto', Number(r.valorAdicionalNoturno) === 0);
   $('r-e50').textContent = `${r.totalExtra50}h`;
   $('r-e75').textContent = `${r.totalExtra75}h`;
   $('r-e100').textContent = `${r.totalExtra100}h`;
@@ -242,6 +245,12 @@ function abrirPainel(iso, registo) {
     $('painel-resultado').classList.remove('oculto');
     $('pr-total-horas').textContent = `${registo.horas_trabalhadas}h`;
     $('pr-valor').textContent = fmtEuro(registo.valor_total);
+    if (Number(registo.horas_noturnas) > 0) {
+      $('pr-noturno-linha').classList.remove('oculto');
+      $('pr-noturno').textContent = `${registo.horas_noturnas}h (${fmtEuro(registo.valor_adicional_noturno)})`;
+    } else {
+      $('pr-noturno-linha').classList.add('oculto');
+    }
     $('btn-apagar-registo').classList.remove('oculto');
   } else {
     $('painel-resultado').classList.add('oculto');
@@ -404,9 +413,24 @@ $('btn-excel').addEventListener('click', () => exportar('excel'));
 $('btn-config').addEventListener('click', () => {
   $('config-valor-hora').value = config.valor_hora_atual;
   $('config-valor-vale').value = config.valor_vale_alimentacao_atual;
+  turnoConfigSelecionado = config.turno || 'normal';
+  atualizarBotoesTurno();
   $('config-erro').textContent = '';
   $('config-fundo').classList.remove('oculto');
 });
+
+document.querySelectorAll('#config-turno-opcoes .tipo-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    turnoConfigSelecionado = btn.dataset.turno;
+    atualizarBotoesTurno();
+  });
+});
+
+function atualizarBotoesTurno() {
+  document.querySelectorAll('#config-turno-opcoes .tipo-btn').forEach((btn) => {
+    btn.classList.toggle('ativo', btn.dataset.turno === turnoConfigSelecionado);
+  });
+}
 $('btn-fechar-config').addEventListener('click', () => $('config-fundo').classList.add('oculto'));
 $('btn-salvar-config').addEventListener('click', salvarConfig);
 
