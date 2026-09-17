@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'select nome, email, papel, valor_hora_atual, valor_vale_alimentacao_atual from usuarios where id = $1',
+      'select nome, email, papel, turno, valor_hora_atual, valor_vale_alimentacao_atual from usuarios where id = $1',
       [req.usuario.id]
     );
     if (rows.length === 0) return res.status(404).json({ erro: 'Usuário não encontrado.' });
@@ -20,17 +20,20 @@ router.get('/', async (req, res) => {
 
 // PUT /api/config -> atualizar os próprios valores (não afeta registos já lançados)
 router.put('/', async (req, res) => {
-  const { valorHoraAtual, valorValeAlimentacaoAtual } = req.body;
+  const { valorHoraAtual, valorValeAlimentacaoAtual, turno } = req.body;
 
   if (!valorHoraAtual || !valorValeAlimentacaoAtual) {
     return res.status(400).json({ erro: 'Informe valorHoraAtual e valorValeAlimentacaoAtual.' });
   }
+  if (turno && !['normal', 'terceiro'].includes(turno)) {
+    return res.status(400).json({ erro: 'Turno inválido.' });
+  }
 
   try {
     const { rows } = await pool.query(
-      `update usuarios set valor_hora_atual = $1, valor_vale_alimentacao_atual = $2
-       where id = $3 returning valor_hora_atual, valor_vale_alimentacao_atual`,
-      [valorHoraAtual, valorValeAlimentacaoAtual, req.usuario.id]
+      `update usuarios set valor_hora_atual = $1, valor_vale_alimentacao_atual = $2, turno = coalesce($3, turno)
+       where id = $4 returning valor_hora_atual, valor_vale_alimentacao_atual, turno`,
+      [valorHoraAtual, valorValeAlimentacaoAtual, turno || null, req.usuario.id]
     );
     res.json(rows[0]);
   } catch (err) {

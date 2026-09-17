@@ -7,6 +7,7 @@ create table if not exists usuarios (
   email text not null unique,
   senha_hash text not null,
   papel text not null default 'funcionario' check (papel in ('funcionario', 'admin')),
+  turno text not null default 'normal' check (turno in ('normal', 'terceiro')),
   valor_hora_atual numeric(10,2) not null default 5.88,
   valor_vale_alimentacao_atual numeric(10,2) not null default 10.46,
   created_at timestamptz not null default now()
@@ -24,6 +25,9 @@ create table if not exists registros (
   horas_extra_50 numeric(6,2) not null default 0,
   horas_extra_75 numeric(6,2) not null default 0,
   horas_extra_100 numeric(6,2) not null default 0,
+  horas_noturnas numeric(6,2) not null default 0,
+  percentual_noturno_usado numeric(4,2) not null default 0,
+  valor_adicional_noturno numeric(10,2) not null default 0,
   valor_hora_usado numeric(10,2) not null,
   vale_alimentacao_usado numeric(10,2) not null default 0,
   valor_total numeric(10,2) not null,

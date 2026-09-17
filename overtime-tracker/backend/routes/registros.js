@@ -6,7 +6,7 @@ const router = express.Router();
 
 async function getConfigDoUsuario(usuarioId) {
   const { rows } = await pool.query(
-    'select valor_hora_atual, valor_vale_alimentacao_atual from usuarios where id = $1',
+    'select valor_hora_atual, valor_vale_alimentacao_atual, turno from usuarios where id = $1',
     [usuarioId]
   );
   return rows[0];
@@ -63,6 +63,7 @@ router.post('/', async (req, res) => {
       horaEntrada,
       horaSaida,
       tipoDia,
+      turno: config.turno,
       valorHora: config.valor_hora_atual,
       valorValeAlimentacao: config.valor_vale_alimentacao_atual,
     });
@@ -70,9 +71,9 @@ router.post('/', async (req, res) => {
     const { rows } = await pool.query(
       `insert into registros
         (usuario_id, data, tipo_dia, hora_entrada, hora_saida, horas_trabalhadas, horas_normais,
-         horas_extra_50, horas_extra_75, horas_extra_100, valor_hora_usado,
-         vale_alimentacao_usado, valor_total, observacao, updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, now())
+         horas_extra_50, horas_extra_75, horas_extra_100, horas_noturnas, percentual_noturno_usado,
+         valor_adicional_noturno, valor_hora_usado, vale_alimentacao_usado, valor_total, observacao, updated_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, now())
        on conflict (usuario_id, data) do update set
          tipo_dia = excluded.tipo_dia,
          hora_entrada = excluded.hora_entrada,
@@ -82,6 +83,9 @@ router.post('/', async (req, res) => {
          horas_extra_50 = excluded.horas_extra_50,
          horas_extra_75 = excluded.horas_extra_75,
          horas_extra_100 = excluded.horas_extra_100,
+         horas_noturnas = excluded.horas_noturnas,
+         percentual_noturno_usado = excluded.percentual_noturno_usado,
+         valor_adicional_noturno = excluded.valor_adicional_noturno,
          valor_hora_usado = excluded.valor_hora_usado,
          vale_alimentacao_usado = excluded.vale_alimentacao_usado,
          valor_total = excluded.valor_total,
@@ -99,6 +103,9 @@ router.post('/', async (req, res) => {
         calculo.horasExtra50,
         calculo.horasExtra75,
         calculo.horasExtra100,
+        calculo.horasNoturnas,
+        calculo.percentualNoturno,
+        calculo.valorAdicionalNoturno,
         config.valor_hora_atual,
         calculo.valeAlimentacaoUsado,
         calculo.valorTotal,

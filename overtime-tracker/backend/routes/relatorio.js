@@ -24,6 +24,8 @@ function calcularResumo(registrosExtras, registrosMes) {
   const diasTrabalhados = registrosMes.length;
   const totalValeAlimentacao = registrosMes.reduce((s, r) => s + Number(r.vale_alimentacao_usado), 0);
   const valorHorasNormais = registrosMes.reduce((s, r) => s + Number(r.horas_normais) * Number(r.valor_hora_usado), 0);
+  const totalHorasNoturnas = registrosMes.reduce((s, r) => s + Number(r.horas_noturnas), 0);
+  const valorAdicionalNoturno = registrosMes.reduce((s, r) => s + Number(r.valor_adicional_noturno), 0);
 
   return {
     diasTrabalhados,
@@ -34,7 +36,9 @@ function calcularResumo(registrosExtras, registrosMes) {
     valorHorasNormais: round2(valorHorasNormais),
     valorExtras: round2(valorExtras),
     totalValeAlimentacao: round2(totalValeAlimentacao),
-    valorTotalGeral: round2(valorHorasNormais + valorExtras + totalValeAlimentacao),
+    totalHorasNoturnas: round2(totalHorasNoturnas),
+    valorAdicionalNoturno: round2(valorAdicionalNoturno),
+    valorTotalGeral: round2(valorHorasNormais + valorExtras + totalValeAlimentacao + valorAdicionalNoturno),
   };
 }
 
@@ -114,6 +118,7 @@ router.get('/:ano/:mes/pdf', async (req, res) => {
     doc.text(`Dias trabalhados: ${r.diasTrabalhados}`);
     doc.text(`Horas normais: ${r.totalHorasNormais}h — ${r.valorHorasNormais}€`);
     doc.text(`Vale alimentação: ${r.totalValeAlimentacao}€`);
+    doc.text(`Horas noturnas (22h-07h): ${r.totalHorasNoturnas}h — adicional: ${r.valorAdicionalNoturno}€`);
     doc.text(`Horas extra 50%: ${r.totalExtra50}h`);
     doc.text(`Horas extra 75%: ${r.totalExtra75}h`);
     doc.text(`Horas extra 100%: ${r.totalExtra100}h`);
@@ -160,13 +165,17 @@ router.get('/:ano/:mes/excel', async (req, res) => {
       { header: 'Entrada', key: 'entrada', width: 10 },
       { header: 'Saída', key: 'saida', width: 10 },
       { header: 'Horas normais', key: 'normais', width: 14 },
+      { header: 'Horas noturnas', key: 'noturnas', width: 14 },
+      { header: 'Adicional noturno (€)', key: 'adicionalNoturno', width: 18 },
       { header: 'Vale alimentação (€)', key: 'vale', width: 18 },
       { header: 'Observação', key: 'obs', width: 30 },
     ];
     dados.registrosMes.forEach((r) => {
       sheetMes.addRow({
         data: r.data, tipo: r.tipo_dia, entrada: r.hora_entrada, saida: r.hora_saida,
-        normais: Number(r.horas_normais), vale: Number(r.vale_alimentacao_usado), obs: r.observacao || '',
+        normais: Number(r.horas_normais), noturnas: Number(r.horas_noturnas),
+        adicionalNoturno: Number(r.valor_adicional_noturno),
+        vale: Number(r.vale_alimentacao_usado), obs: r.observacao || '',
       });
     });
 
